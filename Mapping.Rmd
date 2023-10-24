@@ -1,20 +1,25 @@
----
-title: "Mapping Assemblages"
-author: "Bethany Potter"
-date: "2023-10-18"
-output:
-  pdf_document: default
-  html_document: default
----
-```{r}
+Mapping Assemblages
+Bethany Potter
+2023-10-18
 #Two mapping options are given, and the most appropriate for your project will depend on the maximum artifact density per unit. Assuming most artifacts are found in the screen and a low density overall, you can append a random decimal to the northing and easting of each artifact and plot these randomized locations. With higher artifact density, it is more helpful to scale markers so that this information is not lost due to overlapping markers.
 
 #This example is mapping artifacts from the screen. Quads were recorded for some artifacts, but not all. Mapping artifacts by their recorded northing and easting would place them all in the southwest corner of their respective units. For the first map, we will instead center all artifacts in their units by adding 0.5 to each northing and easting. The loaded CSV files in this example include three columns: N, E, and Type.
 
-#Load necessary libraries:
+#Load necessary libraries and tell R that we prefer to use dplyr when conflicts are encountered:
 library(tidyverse)
+## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+## ✔ dplyr     1.1.3     ✔ readr     2.1.4
+## ✔ forcats   1.0.0     ✔ stringr   1.5.0
+## ✔ ggplot2   3.4.3     ✔ tibble    3.2.1
+## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
+## ✔ purrr     1.0.2     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 library(conflicted)
-
+conflicts_prefer(dplyr::filter) 
+## [conflicted] Will prefer dplyr::filter over any other package.
 #Import data:
 art1 <- read.csv('101_artifacts_simple.csv')
 art5 <- read.csv('105_artifacts_simple.csv')
@@ -29,10 +34,44 @@ T5 <- art5$Type
 
 #Convert N and E to decimals:
 type.convert(N1, as.is = TRUE, dec = '.')
+##  [1] 1046.0 1046.0 1046.0 1046.0 1046.0 1046.0 1046.0 1046.0 1046.0 1046.0
+## [11] 1046.0 1046.0 1046.0 1046.0 1046.0 1047.0 1047.0 1047.0 1047.0 1047.0
+## [21] 1047.0 1047.0 1047.0 1048.0 1048.0 1048.0 1048.0 1048.0 1048.0 1048.0
+## [31] 1048.0 1049.0 1049.0 1049.0 1049.0 1050.0 1050.0 1050.0 1050.5 1055.0
 type.convert(E1, as.is = TRUE, dec = '.')
+##  [1] 1542 1542 1542 1542 1542 1542 1542 1543 1543 1543 1543 1543 1543 1543 1543
+## [16] 1543 1543 1543 1545 1545 1546 1546 1546 1543 1544 1546 1546 1546 1548 1548
+## [31] 1548 1543 1551 1553 1553 1555 1555 1555 1559 1567
 type.convert(N5, as.is = TRUE, dec = '.')
+##   [1]  965.00  974.00  976.00  976.00  996.00  997.00 1001.00 1002.00 1007.00
+##  [10] 1032.00 1037.00 1037.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00
+##  [19] 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00
+##  [28] 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00
+##  [37] 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00
+##  [46] 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00
+##  [55] 1038.00 1038.00 1038.00 1038.00 1038.00 1038.00 1039.00 1039.00 1039.00
+##  [64] 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00
+##  [73] 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00
+##  [82] 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00
+##  [91] 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00 1039.00
+## [100] 1039.00 1039.00 1039.00 1039.00 1040.00 1040.00 1040.00 1040.00 1040.00
+## [109] 1040.00 1040.00 1040.00 1041.00 1041.00 1041.00 1041.00 1072.00 1145.00
+## [118] 1170.00 1170.00 1170.00 1170.00 1170.00 1170.00 1170.00 1171.00 1171.00
+## [127] 1171.00 1171.53 1172.00
 type.convert(E5, as.is = TRUE, dec = '.')
-
+##   [1] 999.00 996.00 996.00 996.00 992.00 993.00 990.00 990.00 993.00 992.00
+##  [11] 992.00 993.00 992.00 992.00 992.00 992.00 992.00 992.00 992.00 992.00
+##  [21] 992.00 992.00 992.00 992.00 992.00 992.00 992.00 992.00 992.00 992.00
+##  [31] 992.00 992.00 992.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00
+##  [41] 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00
+##  [51] 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00
+##  [61] 933.00 933.00 933.00 933.00 933.00 933.00 933.00 992.00 992.00 992.00
+##  [71] 992.00 992.00 992.00 992.00 993.00 993.00 993.00 993.00 993.00 993.00
+##  [81] 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00
+##  [91] 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00 993.00
+## [101] 993.00 993.00 993.00 934.00 992.00 992.00 992.00 992.00 992.00 992.00
+## [111] 992.00 992.00 992.00 992.00 992.00 991.00 982.00 973.00 973.00 973.00
+## [121] 974.00 974.00 974.00 974.00 973.00 973.00 973.00 974.44 975.00
 #For our first map, we'll center the artifacts in their units. Create new N and E points by adding 0.5 to each N and E value:
 N1c <- N1+0.5
 E1c <- E1+0.5
@@ -49,13 +88,31 @@ p5 <- c('#cc79a7', '#009e73', '#959595', '#d55e00')
 
 #Plot these locations using ggplot2. Plot the flakes first, as they are the most common artifact type, and plot everything else after so that it is visible on top of the flakes:
 ggplot(c101 %>% filter(T1 == "FK")) + geom_count(aes(x=E1c, y=N1c, color=T1)) + geom_count(data = c101 %>% filter(T1 != "FK"), aes(x=E1c, y=N1c, color=T1)) + labs(x = "Easting", y = "Northing", color = "Artifact type") + ggtitle("14SN101") + scale_color_manual(values = p1) + coord_fixed() + scale_y_continuous(breaks = seq(1046, 1056, 1), minor_breaks = NULL) + scale_x_continuous(breaks = seq(1540, 1570, 5), minor_breaks = seq(1540, 1570, 1)) 
-
+ 
 ggplot(c105 %>% filter(T5 == "FK")) + geom_count(aes(x=E5c, y=N5c, color=T5)) + geom_count(data = c105 %>% filter(T5 != "FK"), aes(x=E5c, y=N5c, color=T5)) + labs(x = "Easting", y = "Northing", color = "Artifact type") + ggtitle("14SN105") + scale_color_manual(values = p5) + coord_fixed() + scale_y_continuous(breaks = seq(950, 1200, 20), minor_breaks = seq(950, 1200, 5)) + scale_x_continuous(breaks = seq(930, 1010, 20), minor_breaks = seq(930, 1010, 5)) 
-
+ 
 #You may want to change the color palette, alpha, breaks, and layer order based on your artifact types and their distribution. These were selected to ensure good visualization of the example data set. 
 
 #For our next map, we'll randomly distribute the artifacts within their respective units.
 
+#Add a random decimal between (0.01 and 0.99) to each unit value. First, generate four lists of random numbers with the appropriate number of entries for each list of coordinates. Then add those values to the existing artifact unit coordinates:
+rand1N <- runif(n=40, min=0, max=1)
+rand1E <- runif(n=40, min=0, max=1)
+rand5N <- runif(n=129, min=0, max=1)
+rand5E <- runif(n=129, min=0, max=1)
 
-```
+N1r <- N1 + rand1N
+E1r <- E1 + rand1E
+N5r <- N5 + rand5N
+E5r <- E5 + rand5E
 
+#Store the randomized locations as new dataframes:
+r101 <- data.frame(N1r, E1r, T1)
+r105 <- data.frame(N5r, E5r, T5)
+
+#Plot these locations using ggplot2, using the alpha to make the points more transparent:
+ggplot(data = r101, mapping = aes(x = E1r, y = N1r, color = T1)) + geom_point(alpha=0.5) + labs(x = "Easting", y = "Northing", color = "Artifact type") + ggtitle("14SN101") + scale_color_manual(values = p1) + coord_fixed() + scale_y_continuous(breaks = seq(1046, 1056, 1), minor_breaks = NULL) + scale_x_continuous(breaks = seq(1540, 1570, 5), minor_breaks = seq(1540, 1570, 1)) 
+ 
+ggplot(data = r105, mapping = aes(x = E5r, y = N5r, color = T5)) + geom_point(alpha=0.5) + labs(x = "Easting", y = "Northing", color = "Artifact type") + ggtitle("14SN105") + scale_color_manual(values = p5) + coord_fixed() + scale_y_continuous(breaks = seq(950, 1200, 20), minor_breaks = seq(950, 1200, 5)) + scale_x_continuous(breaks = seq(930, 1010, 20), minor_breaks = seq(930, 1010, 5)) 
+ 
+#For this many artifacts, scaled points are an easier visualization to interpret. However, both options are included here. Choose whichever is right for your purposes. You could also use the layer trick from the scaled marker option to move flakes to the back in the randomized version. 
