@@ -1,0 +1,61 @@
+---
+title: "Mapping Assemblages"
+author: "Bethany Potter"
+date: "2023-10-18"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+#Two mapping options are given, and the most appropriate for your project will depend on the maximum artifact density per unit. Assuming most artifacts are found in the screen and a low density overall, you can append a random decimal to the northing and easting of each artifact and plot these randomized locations. With higher artifact density, it is more helpful to scale markers so that this information is not lost due to overlapping markers.
+
+#This example is mapping artifacts from the screen. Quads were recorded for some artifacts, but not all. Mapping artifacts by their recorded northing and easting would place them all in the southwest corner of their respective units. For the first map, we will instead center all artifacts in their units by adding 0.5 to each northing and easting. The loaded CSV files in this example include three columns: N, E, and Type.
+
+#Load necessary libraries:
+library(tidyverse)
+library(conflicted)
+
+#Import data:
+art1 <- read.csv('101_artifacts_simple.csv')
+art5 <- read.csv('105_artifacts_simple.csv')
+
+#Extract each column of data:
+N1 <- art1$N
+E1 <- art1$E
+T1 <- art1$Type
+N5 <- art5$N
+E5 <- art5$E
+T5 <- art5$Type
+
+#Convert N and E to decimals:
+type.convert(N1, as.is = TRUE, dec = '.')
+type.convert(E1, as.is = TRUE, dec = '.')
+type.convert(N5, as.is = TRUE, dec = '.')
+type.convert(E5, as.is = TRUE, dec = '.')
+
+#For our first map, we'll center the artifacts in their units. Create new N and E points by adding 0.5 to each N and E value:
+N1c <- N1+0.5
+E1c <- E1+0.5
+N5c <- N5+0.5
+E5c <- E5+0.5
+
+#Store these new values in a dataframe:
+c101 <- data.frame(N1c, E1c, T1)
+c105 <- data.frame(N5c, E5c, T5)
+
+#Create two color lists to ensure that the colors are consistent between the two data sets and flakes, as the most common artifact, are more transparent to ensure vibility of tools: 
+p1 <- c('#959595', '#d55e00')
+p5 <- c('#cc79a7', '#009e73', '#959595', '#d55e00')
+
+#Plot these locations using ggplot2. Plot the flakes first, as they are the most common artifact type, and plot everything else after so that it is visible on top of the flakes:
+ggplot(c101 %>% filter(T1 == "FK")) + geom_count(aes(x=E1c, y=N1c, color=T1)) + geom_count(data = c101 %>% filter(T1 != "FK"), aes(x=E1c, y=N1c, color=T1)) + labs(x = "Easting", y = "Northing", color = "Artifact type") + ggtitle("14SN101") + scale_color_manual(values = p1) + coord_fixed() + scale_y_continuous(breaks = seq(1046, 1056, 1), minor_breaks = NULL) + scale_x_continuous(breaks = seq(1540, 1570, 5), minor_breaks = seq(1540, 1570, 1)) 
+
+ggplot(c105 %>% filter(T5 == "FK")) + geom_count(aes(x=E5c, y=N5c, color=T5)) + geom_count(data = c105 %>% filter(T5 != "FK"), aes(x=E5c, y=N5c, color=T5)) + labs(x = "Easting", y = "Northing", color = "Artifact type") + ggtitle("14SN105") + scale_color_manual(values = p5) + coord_fixed() + scale_y_continuous(breaks = seq(950, 1200, 20), minor_breaks = seq(950, 1200, 5)) + scale_x_continuous(breaks = seq(930, 1010, 20), minor_breaks = seq(930, 1010, 5)) 
+
+#You may want to change the color palette, alpha, breaks, and layer order based on your artifact types and their distribution. These were selected to ensure good visualization of the example data set. 
+
+#For our next map, we'll randomly distribute the artifacts within their respective units.
+
+
+```
+
