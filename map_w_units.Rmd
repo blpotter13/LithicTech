@@ -1,0 +1,95 @@
+---
+title: "Mapping excavated units"
+author: "Bethany Potter"
+date: "2023-10-31"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+##Load libraries:
+library(tidyverse)
+library(conflicted)
+conflicts_prefer(dplyr::filter) 
+
+##Import units and years excavated from CSV to dataframe:
+units <- read.csv("14SN105_unit-ex-yrs.csv")
+
+##Pull northing and easting data, then convert from integer to decimal values:
+north <- units$N
+east <- units$E
+type.convert(north, as.is = TRUE, dec = '.')
+type.convert(east, as.is = TRUE, dec='.')
+
+##Create a new year vector and dataframe using the average of opening and 
+##closing years, so that units dug over two years are distinct from those opened 
+##and closed in the same year:
+Year <- (units$Start_yr+units$End_yr)/2
+units2 <- data.frame(north,east,Year)
+
+##Plot units as rectangles using SW corner +1 as dimensional limits and make the 
+##boxes slightly transparent so the grid is visible underneath:
+ggplot() + geom_rect(data=units2,mapping=aes(xmin=east,xmax=east+1,ymin=north,ymax=north+1,fill=Year),alpha=0.25) + coord_fixed()
+
+##Add artifacts on top of mapped units. Create new data frame with northing, 
+##easting and year:
+
+art1 <- read.csv('101_artifacts_simple.csv')
+art5 <- read.csv('105_artifacts_simple.csv')
+
+##Extract each column of data:
+N1 <- art1$N
+E1 <- art1$E
+T1 <- art1$Type
+N5 <- art5$N
+E5 <- art5$E
+T5 <- art5$Type
+
+##Convert N and E to decimals:
+type.convert(N1, as.is = TRUE, dec = '.')
+type.convert(E1, as.is = TRUE, dec = '.')
+type.convert(N5, as.is = TRUE, dec = '.')
+type.convert(E5, as.is = TRUE, dec = '.')
+
+##For our first map, we'll center the artifacts in their units. Create new N and 
+##E points by adding 0.5 to each N and E value:
+N1c <- N1+0.5
+E1c <- E1+0.5
+N5c <- N5+0.5
+E5c <- E5+0.5
+
+##Store these new values in a dataframe:
+c101 <- data.frame(N1c, E1c, T1)
+c105 <- data.frame(N5c, E5c, T5)
+
+##Create two color lists to ensure that the colors are consistent between the 
+##two data sets and flakes, as the most common artifact, are more transparent to 
+##ensure vibility of tools: 
+p1 <- c('#959595', '#d55e00')
+p5 <- c('#cc79a7', '#009e73', '#959595', '#d55e00')
+
+##Plot unit layers first, then artifacts:
+ggplot() + geom_rect(data=units2,mapping=aes(
+  xmin=east,xmax=east+1,ymin=north,ymax=north+1,fill=Year),alpha=0.25) + 
+  geom_count(data=c105 %>% filter(T5 == "FK"), aes(x=E5c, y=N5c, color=T5)) + 
+  geom_count(data = c105 %>% filter(T5 != "FK"), aes(x=E5c, y=N5c, color=T5)) + 
+  labs(x = "Easting", y = "Northing", color = "Artifact type") + 
+  ggtitle("14SN105") + scale_color_manual(values = p5) + coord_fixed() + 
+  scale_y_continuous(
+    breaks = seq(950, 1200, 20), minor_breaks = seq(950, 1200, 5)) + 
+  scale_x_continuous(
+    breaks = seq(930, 1010, 20), minor_breaks = seq(930, 1010, 5)) 
+
+##Create a second plot limiting the extent to excavated units for which we have 
+##year data:
+ggplot() + geom_rect(data=units2,mapping=aes(
+  xmin=east,xmax=east+1,ymin=north,ymax=north+1,fill=Year),alpha=0.25) + 
+  geom_count(data=c105 %>% filter(T5 == "FK"), aes(x=E5c, y=N5c, color=T5)) + 
+  geom_count(data = c105 %>% filter(T5 != "FK"), aes(x=E5c, y=N5c, color=T5)) + 
+  labs(x = "Easting", y = "Northing", color = "Artifact type") + 
+  ggtitle("14SN105") + 
+  scale_color_manual(values = p5) + coord_fixed() + 
+  xlim(990,998) + ylim(996,1006)
+
+```
+
