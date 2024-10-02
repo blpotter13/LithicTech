@@ -1,0 +1,47 @@
+---
+title: "Interpolated Horizons"
+author: "Bethany Potter"
+date: "2024-03-07"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Import data:
+bk <- read.csv("Bk_shots.csv")
+mod <- read.csv("surf_shots.csv")
+
+#Load libraries:
+library(tidyr)
+library(ggplot2)
+
+#Loaded data is sorted by northing, so make two new dataframes that are sorted by easting:
+bke <- bk[order(bk$E),]
+me <- mod[order(mod$E),]
+
+#Generate interpolated points:
+AppBkN <- approx(x=bk$N,y=bk$Z,method="linear",n=1000,yleft=98.75,yright=98.75,rule=2,ties="ordered")
+AppBkE <- approx(x=bke$E,y=bke$Z,method="linear",n=1000,yleft=98.75,yright=96.50,rule=2,ties="ordered")
+AppModN <- approx(x=mod$N,y=mod$Z,method="linear",n=1000,yleft=98.75,yright=98.75,rule=2,ties="ordered")
+AppModE <- approx(x=me$E,y=me$Z,method="linear",n=1000,yleft=100.50,yright=98.75,rule=2,ties="ordered")
+
+#Store points as dataframe:
+abn <- data.frame(AppBkN$x,AppBkN$y)
+abe <- data.frame(AppBkE$x,AppBkE$y)
+amn <- data.frame(AppModN$x,AppModN$y)
+ame <- data.frame(AppModE$x,AppModE$y)
+
+#Plot the points with smoothing:
+ggplot(data=abn,mapping=aes(x=AppBkN.x,y=AppBkN.y))+geom_smooth()+xlab("N")+ylab("Z")+ggtitle("Interpolated Bk Elevation by Northing")+coord_equal(50)
+ggplot(data=abe,mapping=aes(x=AppBkE.x,y=AppBkE.y))+geom_smooth()+coord_equal(ratio=50)+xlab("E")+ylab("Z")+ggtitle("Interpolated Bk Elevation by Easting")
+ggplot(data=ame,mapping=aes(x=AppModE.x,y=AppModE.y))+geom_smooth()+coord_equal(ratio=50)+xlab("E")+ylab("Z")+ggtitle("Interpolated Modern Surface by Easting")
+ggplot(data=amn,mapping=aes(x=AppModN.x,y=AppModN.y))+geom_smooth()+xlab("N")+ylab("Z")+ggtitle("Interpolated Modern Surface by Northing")+coord_equal(50)
+
+# Plot all modern and ancient surfaces together:
+ggplot() + geom_smooth(data=abn,mapping=aes(x=AppBkN.x,y=AppBkN.y),color="red") + geom_smooth(data=amn,mapping=aes(x=AppModN.x,y=AppModN.y),color="blue") + xlab("N") + ylab("Z") + ggtitle("Interpolated Surfaces by Northing") + coord_equal(40) 
+ggplot()+geom_smooth(data=abe,mapping=aes(x=AppBkE.x,y=AppBkE.y),color="red")+geom_smooth(data=ame,mapping=aes(x=AppModE.x,y=AppModE.y),color="blue")+coord_equal(ratio=50)+xlab("E")+ylab("Z")+ggtitle("Interpolated Surfaces by Easting")
+```
+
