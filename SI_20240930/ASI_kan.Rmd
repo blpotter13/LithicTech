@@ -1,0 +1,41 @@
+---
+title: "ASI"
+output: word_document
+date: "2024-10-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+
+#ASI Function by Todd Surovell (Surovell et al. 2021):
+asi<-function(counts){
+     diff<-vector()
+     j<-1
+     check<-FALSE
+     while (check==FALSE & j<length(counts)) {if (counts[j]==0 & counts[j+1]==0) {
+             counts<-counts[-j]
+             j<-j-1}
+         j<-j+1
+         if (j>=length(counts)) {check==TRUE}}
+     lvls<-length(counts)
+     for (j in 1:(lvls-1)) {
+         diff[j]<-abs(counts[j]-counts[j+1])}
+     mean.bar.gap<-(((mean(diff))))
+     intactness.index<-(mean.bar.gap)/(2*mean(counts[1:lvls]))
+     return(intactness.index)}
+
+#Import data:
+X101forASI <- read_csv("101forASI.csv")
+X105forASI <- read_csv("105forASI.csv")
+
+#Run function:
+asi(X101forASI$count)
+## [1] 0.4144701
+asi(X105forASI$count)
+## [1] 0.4507353
+```
+
