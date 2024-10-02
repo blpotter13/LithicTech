@@ -1,0 +1,43 @@
+---
+title: "UW_by_site"
+output: word_document
+date: "2024-09-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+# Raw material of artifacts positive for usewear:
+rm101 <- c(2,0,3,2,0,0,0,1)
+rm105 <- c(0,2,0,0,1,2,1,2)
+raw_mat_df <- data.frame(rm101,rm105)
+# Tool forms of artifaacts positive for usewear:
+tf101 <- c(0,0,8)
+tf105 <- c(1,1,6)
+tf_df <- data.frame(tf101,tf105)
+# Substrates for artifacts positive for usewear:
+substr101 <- c(6,1,1)
+substr105 <- c(6,2,0)
+substr_df <- data.frame(substr101,substr105)
+# Use rate of examined flakes from each site:
+ur101 <- c(8,3)
+ur105 <- c(8,2)
+ur_df <- data.frame(ur101,ur105)
+# Fisher's Exact Test for each (expected values < 5 for all cases):
+fisher.test(raw_mat_df)
+fisher.test(tf_df)
+fisher.test(substr_df)
+fisher.test(ur_df)
+# Map utilized artifacts for any spatial patterning:
+library(dplyr)
+library(ggplot2)
+library(readr)
+UWexc <- read_csv("exc_UW_analyzed.csv")
+# Modify columns for clearer data visualization:
+UWexc$Substrate_type <- c("None","None","None","Soft","Soft","Hard","Soft","Multiple","Soft","Soft","Soft","None","None","Soft","Soft","Hard","Soft","Soft","Soft","Hard","Soft")
+UWexc$UW_outcome <- as.character(UWexc$UW_outcome)
+# Map artifacts analyzed for usewear:
+ggplot(data=UWexc%>%filter(Site==105))+geom_point(mapping = aes(x=E,y=N,shape=Artifact_Description,color=Substrate_type),alpha=0.5)+coord_fixed()+ggtitle("14SN105 Utilized Artifacts")
+ggplot(data=UWexc%>%filter(Site==101))+geom_point(mapping = aes(x=E,y=N,shape=Artifact_Description,color=Substrate_type),alpha=0.5)+coord_fixed()+ggtitle("14SN101 Utilized Artifacts")
+```
