@@ -1,0 +1,672 @@
+---
+title: "Kanorado_Lithics"
+author: "BLP"
+date: "2025-04-18"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+## Artifact vertical distribution
+# Load libraries
+library(readr)
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+
+# Import artifact Z data, quickly visualize
+relz <- read_csv("~/Documents/KU/2025Spring/exc_rel_z_20250414.csv")
+hist(x=relz$Mod_diff)
+relz101 <- relz %>% filter(Site=="14SN101")
+relz105 <- relz %>% filter(Site=="14SN105")
+hist(relz101$Mod_diff)
+hist(relz105$Mod_diff)
+
+# Nicely visualize for both, then individual sites
+ggplot(data=relz) + geom_histogram(mapping=aes(
+     x=Mod_diff,fill=Site),position="stack",bins=75) + 
+     coord_flip() + 
+     xlab("Distance from modern surface") + 
+     theme_bw() + 
+     theme(axis.text=element_text(size=12),axis.title=element_text(size=14)) +
+     scale_fill_brewer(palette="Dark2") +
+     ylab("Count") + 
+     ggtitle("Artifact vertical distribution")
+
+ggplot(data=relz101) + geom_histogram(mapping=aes(
+     x=Mod_diff)) + 
+     coord_flip() + 
+     xlab("Distance from modern surface") + 
+     theme_bw() + 
+     theme(axis.text=element_text(size=12),axis.title=element_text(size=14)) +
+     scale_fill_brewer(palette="Dark2") +
+     ylab("Count") + 
+     ggtitle("14SN101: Artifact vertical distribution")
+
+ggplot(data=relz105) + geom_histogram(mapping=aes(
+     x=Mod_diff)) + 
+     coord_flip() + 
+     xlab("Distance from modern surface") + 
+     theme_bw() + 
+     theme(axis.text=element_text(size=12),axis.title=element_text(size=14)) +
+     scale_fill_brewer(palette="Dark2") +
+     ylab("Count") + 
+     ggtitle("14SN105: Artifact vertical distribution")
+
+# Import total station data:
+ts_data <- read_csv(
+  "~/Documents/KU/2024Spring/Kanorado/Sp24KANdata/total_station_elevations.csv", 
+     col_types = cols(...9 = col_skip(), ...10 = col_skip(), 
+         ...11 = col_skip(), ...12 = col_skip(), 
+         ...13 = col_skip(), ...14 = col_skip()))
+ts_data$Site <- as.factor(ts_data$Site)
+ts101 <- ts_data %>% filter(Site=="101")
+ts105 <- ts_data %>% filter(Site=="105")
+surf101 <- ts101 %>% filter(Soil.Horizon=="modern")
+surf105 <- ts105 %>% filter(Soil.Horizon=="modern")
+
+# Visualize artifact distribution with modern surface elevations:
+ggplot() + geom_histogram(data=relz, aes(x=Z, fill=Site), bins=40) +
+  theme_bw() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14)) +
+  coord_flip() +
+  xlab("Elevation (Z)") +
+  ylab("Count") +
+  scale_x_continuous(breaks=c(101,100,99,98,97,96,95,94,93),
+                     minor_breaks=c(100.5,99.5,98.5,97.5,96.5,95.5,94.5,93.5)) +
+  geom_vline(aes(xintercept=max(surf101$Z)),color="#1B9E77FF") +
+  geom_vline(aes(xintercept=max(surf105$Z)),color="#D95F02FF")
+```
+
+
+```{r}
+## Evaluate site integrity:
+# Load libraries:
+library(readr)
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+
+# Import data:
+relz <- read_csv("~/Documents/KU/2025Spring/exc_rel_z_20250414.csv")
+X101forASI <- read_csv(
+  "~/Documents/KU/2024Spring/Kanorado/Sp24KANdata/101forASI.csv")
+X105forASI <- read_csv(
+  "~/Documents/KU/2024Spring/Kanorado/Sp24KANdata/105forASI.csv")
+
+## Look for evidence of size sorting at each site:
+# Bk horizon vs surface area:
+area_bk_101 <- aov(Bk_diff ~ size_upper_bound, data=relz101)
+summary(area_bk_101)
+area_bk_105 <- aov(Bk_diff ~ size_upper_bound, data=relz105)
+summary(area_bk_105)
+
+# Modern surface vs surface area:
+area_mod_101 <- aov(Mod_diff ~ size_upper_bound, data=relz101)
+summary(area_mod_101)
+area_mod_105 <- aov(Mod_diff ~ size_upper_bound, data=relz105)
+summary(area_mod_105)
+
+# Bk horizon vs weight:
+weight_bk_101 <- aov(Bk_diff ~ weight_grams, data=relz101)
+summary(weight_bk_101)
+weight_bk_105 <- aov(Bk_diff ~ weight_grams, data=relz105)
+summary(weight_bk_105)
+
+# Modern surface vs weight:
+weight_mod_101 <- aov(Mod_diff ~ weight_grams, data=relz101)
+summary(weight_mod_101)
+weight_mod_105 <- aov(Mod_diff ~ weight_grams, data=relz105)
+summary(weight_mod_105)
+
+# Visualize relative depth by artifact size:
+ggboxplot(data=relz,x="size_upper_bound",y="Bk_diff") +
+  xlab("Size upper bound (cm)") + 
+  ylab("Distance from Bk horizon (m)") + 
+  ggtitle("Artifact size by elevation")
+ggboxplot(data=relz101 %>% 
+            filter(Portion!="distal") %>% 
+            filter(Portion!="medial"),
+          x="size_upper_bound",y="Bk_diff") +
+  xlab("Size upper bound (cm)") + 
+  ylab("Distance from Bk horizon (m)") + 
+  ggtitle("14SN101: Artifact size by elevation")
+ggboxplot(data=relz105 %>% 
+            filter(Portion!="distal") %>% 
+            filter(Portion!="medial"),
+          x="size_upper_bound",y="Bk_diff") +
+  xlab("Size upper bound (cm)") + 
+  ylab("Distance from Bk horizon (m)") + 
+  ggtitle("14SN105: Artifact size by elevation")
+ggboxplot(data=relz %>% 
+            filter(Portion!="distal") %>% 
+            filter(Portion!="medial"),
+          x="size_upper_bound",y="Bk_diff",color="Site") +
+  xlab("Size upper bound (cm)") + 
+  ylab("Distance from Bk horizon (m)") +
+  theme_bw() + 
+     theme(axis.text=element_text(size=12),axis.title=element_text(size=14)) +
+     scale_color_brewer(palette="Dark2")
+
+# ASI Function (Surovell et al. 2021):
+asi<-function(counts){
+     diff<-vector()
+     j<-1
+     check<-FALSE
+     while (check==FALSE & j<length(counts)) {if (counts[j]==0 & counts[j+1]==0) {
+             counts<-counts[-j]
+             j<-j-1}
+         j<-j+1
+         if (j>=length(counts)) {check==TRUE}}
+     lvls<-length(counts)
+     for (j in 1:(lvls-1)) {
+         diff[j]<-abs(counts[j]-counts[j+1])}
+     mean.bar.gap<-(((mean(diff))))
+     intactness.index<-(mean.bar.gap)/(2*mean(counts[1:lvls]))
+     return(intactness.index)}
+
+#Run function:
+asi(X101forASI$count)
+asi(X105forASI$count)
+
+## Test other possible causes of gradual (not sharp) drop off just to be safe:
+# Visualize depth by raw mat:
+ggboxplot(data=relz101,x="RM_source",y="Bk_diff") +
+  xlab("Raw material source") +
+  ylab("Distance to Bk horizon (m)") +
+  theme_bw() +
+  theme(axis.text.x=element_text(size=12,angle=90,vjust=0.5,hjust=1),
+        axis.title=element_text(size=14))
+ggboxplot(data=relz105,x="RM_source",y="Bk_diff") +
+  xlab("Raw material source") +
+  ylab("Distance to Bk horizon (m)") +
+  theme_bw() +
+  theme(axis.text.x=element_text(size=12,angle=90,vjust=0.5,hjust=1),
+        axis.title=element_text(size=14))
+```
+
+```{r}
+## Evaluate technological attributes at both sites:
+# Load libraries:
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Cortex by site:
+cort_cover <- c("0","< 1/4","< 1/2","< 3/4","< 1")
+cort101 <- c(158,7,2,1,1)
+cort105 <- c(126,1,2,1,7)
+all_cort <- data.frame(cort101,cort105)
+rownames(all_cort) = cort_cover
+cort_chi <- chisq.test(all_cort)
+all_cort
+cort_chi
+cort_fisher <- fisher.test(all_cort)
+cort_fisher
+
+# Platforms by site:
+platforms <- c("faceted","ground","faceted+ground","simple","battered")
+p101 <- c(17,12,6,39,1)
+p105 <- c(10,0,2,75,0)
+plats_all <- data.frame(p101,p105)
+rownames(plats_all) = platforms
+plat_chi <- chisq.test(plats_all)
+plats_all
+plat_chi
+plat_fisher <- fisher.test(plats_all)
+plat_fisher
+
+# Technotype by site:
+typology <- c("BTF","GCR","GP","Overshot","PP","PR")
+t101 <- c(6,1,1,1,1,5)
+t105 <- c(2,2,0,0,0,8)
+all_typ <- data.frame(t101,t105)
+rownames(all_typ) = typology
+typ_chi <- chisq.test(all_typ)
+all_typ
+typ_chi
+typ_fisher <- fisher.test(all_typ)
+typ_fisher
+
+## Compare raw material use by site for all artifacts:
+
+# Import data:
+type_mat_size <- read_csv(
+  "~/Documents/KU/2024Fall/Kanorado/FA24Kan/type_mat_size.csv")
+type_mat_size$Site <- as.factor(type_mat_size$Site)
+
+# Visualize data:
+ggplot(data=type_mat_size,aes(x=Raw_mat,fill=Site)) + 
+  geom_bar(position="dodge") +
+  xlab("Raw material") +
+  ylab("Count") + 
+  ggtitle("Raw material by site") +
+  theme_bw(base_size=32) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(data=type_mat_size,aes(x=Raw_mat,y=size_upper_bound,fill=Site)) + 
+  geom_boxplot(position="dodge") +
+  xlab("Raw material") +
+  ylab("Size (area in cm)") + ylim(0,2) +
+  ggtitle("Size by raw material") +
+  theme_bw(base_size=32) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ylim.prim <- c(0,100)
+ylim.sec <- c(0,40)
+b <- diff(ylim.prim)/diff(ylim.sec)
+a <- ylim.prim[1] - b*ylim.sec[1]
+ggplot() + 
+  geom_bar(data=type_mat_size,
+           aes(x=Raw_mat,fill=Site),
+           position="dodge") +
+  geom_boxplot(data=type_mat_size,
+               aes(x=Raw_mat,y=a+size_upper_bound*b,fill=Site),color="black") +
+  scale_y_continuous("Count",sec.axis = sec_axis(~ (. - a)/b, name = "Size")) + 
+  xlab("Raw Material") + theme_bw()
+
+scale_factor <- 3
+g <- ggplot() + 
+  geom_bar(data=type_mat_size,
+           aes(x=Raw_mat,fill=Site),
+           position="dodge") +
+  geom_boxplot(data=type_mat_size,
+               aes(x=Raw_mat,
+                   y=size_upper_bound * scale_factor,fill=Site),
+               color="black") +
+  scale_y_continuous("Count",
+                     sec.axis = sec_axis(~ . / scale_factor, 
+                                         name = "Size",
+                                         breaks=seq(0,30,by=5))) + 
+  xlab("Raw Material") + 
+  theme_bw(base_size = 18) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  coord_fixed(ratio=0.075)
+ggsave("size_count_mat.png",g,limitsize = FALSE)
+
+## Compare raw materials by site for excavated assemblage only:
+# Import data, split by site, calculate and append percentages:
+rm_data <- read_csv("~/Documents/KU/2025Spring/Exc_art_data_20250409.csv")
+rm_101 <- rm_data %>% filter(Site=="14SN101")
+rm_105 <- rm_data %>% filter(Site=="14SN105")
+sum_101 <- sum(rm_101$Count)
+sum_105 <- sum(rm_105$Count)
+rm_101$Pct <- rm_101$Count/sum_101
+rm_105$Pct <- rm_105$Count/sum_105
+rm_pct <- rbind(rm_101,rm_105)
+
+# Visualize excavated raw material categories:
+ggplot(data=rm_data) + 
+  geom_col(aes(x=RM_cat,y=Count,fill=Site),position="dodge") +
+  xlab("Raw material category") +
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(axis.text=element_text(
+    angle = 90, vjust = 0.5, hjust=1, size=12),
+    axis.title=element_text(size=14))
+ggplot(data=rm_pct) +
+  geom_col(aes(x=RM_cat,y=Pct,fill=Site),position="dodge") +
+  scale_y_continuous(labels=scales::percent) + 
+  xlab("Raw material category") + 
+  ylab("Percent of site assemblage") + 
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(axis.text=element_text(
+    angle = 90, vjust = 0.5, hjust=1, size=12),
+        axis.title=element_text(size=14))
+
+# Visualize excavated raw material sources by category from both sites:
+# CCS sources by count and percent:
+rm_data %>% dplyr::filter(RM_cat=="ccs") %>% ggplot() +
+  geom_col(aes(x=RM_source,y=Count,fill=Site),position = "dodge") + 
+  ggtitle("CCS frequency") + 
+  xlab("Source") +
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size=12,angle = 90, vjust = 0.5, hjust=1),
+        axis.title=element_text(size=14))
+rm_pct %>% dplyr::filter(RM_cat=="ccs") %>% ggplot() +
+  geom_col(aes(x=RM_source,y=Pct,fill=Site),position = "dodge") + 
+  ggtitle("CCS sources") + 
+  xlab("Source") +
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size=12,angle = 90, vjust = 0.5, hjust=1),
+        axis.title=element_text(size=14)) +
+  scale_y_continuous(labels=scales::percent) +
+  ylab("Percent of site assemblage")
+
+# Quartzite sources by count and percent:
+rm_data %>% dplyr::filter(RM_cat=="quartzite") %>% ggplot() +
+  geom_col(aes(x=RM_source,y=Count,fill=Site),position = "dodge") + 
+  ggtitle("Quartzite frequency") + 
+  xlab("Source") +
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size=12,angle = 90, vjust = 0.5, hjust=1),
+        axis.title=element_text(size=14))
+rm_pct %>% dplyr::filter(RM_cat=="quartzite") %>% ggplot() +
+  geom_col(aes(x=RM_source,y=Pct,fill=Site),position = "dodge") + 
+  ggtitle("Quartzite sources") + 
+  xlab("Source") +
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size=12,angle = 90, vjust = 0.5, hjust=1),
+        axis.title=element_text(size=14)) +
+  scale_y_continuous(labels=scales::percent) +
+  ylab("Percent of site assemblage")
+
+# Basalt as count and percent:
+rm_data %>% dplyr::filter(RM_cat=="basalt") %>% ggplot() +
+  geom_col(aes(x=RM_cat,y=Count,fill=Site),position = "dodge") + 
+  ggtitle("Basalt frequency") + 
+  xlab("Source") +
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size=12,angle = 90, vjust = 0.5, hjust=1),
+        axis.title=element_text(size=14))
+rm_pct %>% dplyr::filter(RM_cat=="basalt") %>% ggplot() +
+  geom_col(aes(x=RM_source,y=Pct,fill=Site),position = "dodge") + 
+  ggtitle("Basalt frequency") + 
+  xlab("Source") +
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size=12,angle = 90, vjust = 0.5, hjust=1),
+        axis.title=element_text(size=14)) +
+  scale_y_continuous(labels=scales::percent) +
+  ylab("Percent of site assemblage")
+
+# Filter for sourced raw materials only:
+rm_known <- rm_pct %>% filter(RM_source != "Unknown")
+
+# Visualize frequency (count and percent) by distance:
+ggplot(data=rm_known) + 
+  geom_col(aes(x=Min_distance,y=Count,fill=Site),position="dodge") +
+  xlab("Minimum distance (km)") + 
+  ggtitle("Identified source distance") +
+  theme_bw() +
+  theme(axis.title = element_text(size=14),
+        axis.text = element_text(size=12)) +
+  scale_fill_brewer(palette="Dark2")
+ggplot(data=rm_known) + 
+  geom_col(aes(x=Min_distance,y=Pct,fill=Site),position="dodge") +
+  xlab("Minimum distance (km)") + 
+  ylab("Percent of site assemblage") +
+  ggtitle("Identified source distance") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_bw() +
+  theme(axis.title = element_text(size=14),
+        axis.text = element_text(size=12)) +
+  scale_fill_brewer(palette="Dark2")
+
+## Estimate nearest source location as a straight line distance:
+# Import data:
+points <- read_csv("~/Documents/KU/2025Spring/source_points.csv")
+distance_bins <- read_csv("~/Documents/KU/2025Spring/distance_bins.csv")
+
+# Visualize source locations vs frequency:
+ggplot(data=points) + 
+  geom_point(aes(x=X,y=Y,shape=Site,color=Count),position="jitter")
+ggplot(data=points) + 
+  geom_density(mapping=aes(x=Min_distance,fill=Site),alpha=0.5) + 
+  scale_fill_brewer(palette="Dark2")
+ggplot() + 
+  geom_point(data=distance_bins,
+             aes(x=X,y=Y,size=Count,color=Site),
+             position="jitter") + 
+  geom_point(aes(x=0,y=0),shape=8) + 
+  xlab("E/W (km)") + 
+  ylab("N/S (km)") + 
+  ggtitle("Kanorado raw material sourcing (simplified)") +
+  coord_fixed() +
+  scale_color_brewer(palette="Dark2")
+
+## Evaluate for patterning in artifact size vs. source distance:
+# Import size data, filter for good values and known sources:
+data <- read_csv("~/Documents/KU/2025Spring/data_simple.csv")
+rm_known2 <- data %>% dplyr::filter(RM_source!="Unknown")
+rm_known2$Site <- as.factor(rm_known2$Site)
+known_goodsize <- rm_known2 %>% 
+  dplyr::filter(Portion!="medial") %>% 
+  dplyr::filter(Portion!="distal")
+
+# Test for variation:
+size_dist_aov <- aov(Source_distance ~ size_upper_bound, data=known_goodsize)
+summary(size_dist_aov)
+weight_dist_aov <- aov(Source_distance ~ weight_grams, data=known_goodsize)
+summary(weight_dist_aov)
+rm_known_101 <- known_goodsize %>% dplyr::filter(Site=="101")
+rm_known_105 <- known_goodsize %>% dplyr::filter(Site=="105")
+size_dist_101 <- aov(Source_distance ~ size_upper_bound, data=rm_known_101)
+size_dist_105 <- aov(Source_distance ~ size_upper_bound, data=rm_known_105)
+summary(size_dist_101)
+summary(size_dist_105)
+
+# Visualize data:
+ggplot(data=known_goodsize) +
+  geom_smooth(aes(x=Source_distance,y=size_upper_bound,fill=Site)) +
+  theme_bw() + 
+  scale_fill_brewer(palette="Dark2") +
+  ylab("Size uppper bound (cm)") + 
+  xlab("Distance to known source (km)") + 
+  theme(axis.text.x = element_text(size=12),
+        axis.title=element_text(size=14))
+data$RM_cat <- factor(data$RM_cat, levels=c(
+  "ccs",
+  "basalt",
+  "quartzite",
+  "quartz",
+  "unknown",
+  "limestone"
+))
+
+ggplot(data=data %>% filter(Site=="101")) + 
+  geom_bar(aes(x=size_upper_bound,fill=RM_cat)) + 
+  xlab("Size upper bound (cm)") + 
+  ylab("Count") + 
+  theme_bw() + 
+  scale_fill_brewer(palette="Dark2",name="Raw material category") + 
+  ggtitle("14SN101 Artifact Sizes") +
+  theme(axis.text=element_text(size=12),axis.title=element_text(size=14))
+ggplot(data=data %>% filter(Site=="105")) + 
+  geom_bar(aes(x=size_upper_bound,fill=RM_cat)) + 
+  xlab("Size upper bound (cm)") + 
+  ylab("Count") + 
+  theme_bw() + 
+  scale_fill_brewer(palette="Dark2",name="Raw material category") + 
+  ggtitle("14SN105 Artifact Sizes") +
+  theme(axis.text=element_text(size=12),axis.title=element_text(size=14))
+```
+```{r}
+## Evaluate use wear:
+# Load libraries:
+library(dplyr)
+library(ggplot2)
+library(readr)
+
+## Statistical tests:
+# Raw material of artifacts positive for use wear:
+rm101 <- c(2,0,3,2,0,0,1)
+rm105 <- c(0,2,0,0,3,1,1)
+raw_mat_df <- data.frame(rm101,rm105)
+
+# Tool forms of artifacts positive for use wear:
+tf101 <- c(0,0,8)
+tf105 <- c(1,1,5)
+tf_df <- data.frame(tf101,tf105)
+
+# Substrates for artifacts positive for use wear:
+substr101 <- c(6,2)
+substr105 <- c(5,2)
+substr_df <- data.frame(substr101,substr105)
+
+# Use rate of examined flakes from each site:
+ur101 <- c(8,3)
+ur105 <- c(7,2)
+ur_df <- data.frame(ur101,ur105)
+
+# Fisher's Exact Test for each (expected values < 5 for all cases):
+fisher.test(raw_mat_df)
+fisher.test(tf_df)
+fisher.test(substr_df)
+fisher.test(ur_df)
+
+## Visualize horizontal distribution:
+# Import data and clean up:
+UWexc <- read_csv("~/Documents/KU/2024Fall/Kanorado/FA24Kan/exc_UW_analyzed.csv")
+UWexc$UW_outcome <- as.character(UWexc$UW_outcome)
+UWexc$Substrate <- factor(UWexc$Substrate, levels=c("Soft",
+                                              "Hard",
+                                              "Multiple",
+                                              "Negative"))
+UWexc$Artifact_Description <- factor(UWexc$Artifact_Description, 
+                                     levels=c("FK",
+                                              "FK RT",
+                                              "BF",
+                                              "ES"))
+
+# Map artifacts analyzed for use wear:
+ggplot(data=UWexc %>% filter(Site==105)) +
+  geom_point(mapping=
+               aes(x=E,y=N,
+                   shape=Artifact_Description,
+                   color=Substrate),
+             alpha=0.5) +
+  coord_fixed() +
+  ggtitle("14SN105 Utilized Artifacts") +
+  scale_color_brewer(palette="Dark2")
+ggplot(data=UWexc %>% filter(Site==101)) + 
+  geom_point(mapping= 
+               aes(x=E,y=N,
+                   shape=Artifact_Description,
+                   color=Substrate),
+             alpha=0.5) +
+  coord_fixed() +
+  ggtitle("14SN101 Utilized Artifacts") +
+  scale_color_brewer(palette="Dark2")
+
+## Compare usage vs tool type:
+# Import and clean up data:
+uw <- read_csv("~/Documents/KU/2025Spring/exc_uw_20250412.csv")
+uw$Substrate <- factor(uw$Substrate, levels=c("Soft",
+                                              "Hard",
+                                              "Multiple",
+                                              "Negative"))
+uw$Motion <- factor(uw$Motion, level=c("Lateral",
+                                       "Transverse",
+                                       "Multiple",
+                                       "Negative"))
+uw$Usage <- factor(uw$Usage, levels=c("Soft, lateral",
+                                      "Soft, multiple",
+                                      "Hard, transverse",
+                                      "Hard, multiple",
+                                      "Multiple, multiple",
+                                      "Negative"))
+
+# Visualize frequencies:
+ggplot(data=uw) + geom_dotplot(aes(x=Category,y=Usage,fill=Site),
+                               binaxis = "y",
+                               stackdir = "center",
+                               stackratio=1,
+                               stackgroups=TRUE) +
+  xlab("Artifact Type") +
+  ylab("Use Motion") +
+  scale_y_discrete(limits=rev) +
+  theme_bw() + 
+  theme(axis.text=element_text(size=12),axis.title=element_text(size=14)) +
+  scale_fill_brewer(palette="Dark2") +
+  ggtitle("Tool Usage")
+
+## Statistical test of raw material utilization by site:
+# Get counts:
+alibates101 <- count(uw %>% 
+                       filter(Site=="14SN101") %>% 
+                       filter(RM_source=="alibates") %>% 
+                       filter(Usage!="Negative"))
+basalt101 <- count(uw %>% 
+                       filter(Site=="14SN101") %>% 
+                       filter(RM_cat=="basalt") %>% 
+                       filter(Usage!="Negative"))
+cheyenne101 <- count(uw %>% 
+                       filter(Site=="14SN101") %>% 
+                       filter(RM_source=="Cheyenne") %>% 
+                       filter(Usage!="Negative"))
+dakota101 <- count(uw %>% 
+                       filter(Site=="14SN101") %>% 
+                       filter(RM_source=="Dakota") %>% 
+                       filter(Usage!="Negative"))
+florence101 <- count(uw %>% 
+                       filter(Site=="14SN101") %>% 
+                       filter(RM_source=="Florence") %>% 
+                       filter(Usage!="Negative"))
+krf101 <- count(uw %>% 
+                       filter(Site=="14SN101") %>% 
+                       filter(RM_source=="Knife River Flint") %>% 
+                       filter(Usage!="Negative"))
+otherccs101 <- count(uw %>% 
+                       filter(Site=="14SN101") %>% 
+                       filter(RM_cat=="ccs") %>% 
+                       filter(Usage!="Negative") %>% 
+                       filter(RM_source=="Unknown"))
+alibates105 <- count(uw %>% 
+                       filter(Site=="14SN105") %>% 
+                       filter(RM_source=="alibates") %>% 
+                       filter(Usage!="Negative"))
+basalt105 <- count(uw %>% 
+                       filter(Site=="14SN105") %>% 
+                       filter(RM_cat=="basalt") %>% 
+                       filter(Usage!="Negative"))
+cheyenne105 <- count(uw %>% 
+                       filter(Site=="14SN105") %>% 
+                       filter(RM_source=="Cheyenne") %>% 
+                       filter(Usage!="Negative"))
+dakota105 <- count(uw %>% 
+                       filter(Site=="14SN105") %>% 
+                       filter(RM_source=="Dakota") %>% 
+                       filter(Usage!="Negative"))
+florence105 <- count(uw %>% 
+                       filter(Site=="14SN105") %>% 
+                       filter(RM_source=="Florence") %>% 
+                       filter(Usage!="Negative"))
+krf105 <- count(uw %>% 
+                       filter(Site=="14SN105") %>% 
+                       filter(RM_source=="Knife River Flint") %>% 
+                       filter(Usage!="Negative"))
+otherccs105 <- count(uw %>% 
+                       filter(Site=="14SN105") %>% 
+                       filter(RM_cat=="ccs") %>% 
+                       filter(Usage!="Negative") %>% 
+                       filter(RM_source=="Unknown"))
+# Make data frames:
+rm_list <- c("Alibates chert","Basalt","Cheyenne quartzite","Dakota quartzite",
+             "Florence chert","Knife River Flint","Other CCS")
+counts101 <- c(alibates101$n,
+               basalt101$n,
+               cheyenne101$n,
+               dakota101$n,
+               florence101$n,
+               krf101$n,
+               otherccs101$n)
+rm_counts_101 <- tibble(rm_list,counts101)
+counts105 <- c(alibates105$n,
+               basalt105$n,
+               cheyenne105$n,
+               dakota105$n,
+               florence105$n,
+               krf105$n,
+               otherccs105$n)
+rm_counts_105 <- tibble(rm_list,counts105)
+all_counts <- tibble(counts101,counts105)
+
+# Fisher's Exact Test:
+utilized_rm_fisher <- fisher.test(all_counts)
+utilized_rm_fisher
+```
